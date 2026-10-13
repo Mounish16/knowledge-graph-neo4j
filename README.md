@@ -20,6 +20,7 @@
   - [Part A: Python engine only (no installs)](#part-a-python-engine-only-no-installs)
   - [Part B: Neo4j and the Streamlit Q&A app](#part-b-neo4j-and-the-streamlit-q-a-app)
 - [Example questions](#example-questions)
+- [Sample Cypher queries](#sample-cypher-queries)
 - [Project layout](#project-layout)
 - [Configuration](#configuration)
 - [Testing](#testing)
@@ -177,7 +178,13 @@ python load_data.py
 python queries_demo.py
 ```
 
-`load_data.py` clears the database and reloads it, so it is safe to re-run. You should see it load 68 entities and 91 relationships. To look at the graph, open http://localhost:7474 and run:
+`load_data.py` clears the database and reloads it, so it is safe to re-run. You should see it load 68 entities and 91 relationships. To look at the graph, open Neo4j Browser (login `neo4j` / `password123`):
+
+```bash
+open http://localhost:7474      # macOS; on Linux use xdg-open, on Windows start http://localhost:7474, or just paste the URL into a browser
+```
+
+Then run this query to draw the whole graph (see [Sample Cypher queries](#sample-cypher-queries) for more):
 
 ```cypher
 MATCH (n)-[r]->(m) RETURN n, r, m
@@ -208,12 +215,21 @@ streamlit run streamlit_app.py
 
 It opens http://localhost:8501. Type a question at the bottom. Each answer shows the Cypher that was generated and the rows it returned, and the sidebar lets you change the Neo4j and Ollama connection settings and jump to Neo4j Browser. Prefer a terminal? `python llm_qa.py` gives the same Q&A as a prompt.
 
-**Shutting down:**
+**Shutting down** (from the `neo4j` folder):
 
 ```bash
-docker compose down        # stop Neo4j, keep data
-docker compose down -v     # stop Neo4j and delete the stored graph
+deactivate                 # leave the Python virtual environment
+docker compose down        # stop Neo4j; the loaded graph is kept
 ```
+
+Stop the Streamlit app with `Ctrl+C` in its terminal, and stop `ollama serve` the same way if you started it manually. To delete the stored graph as well and start fresh next time:
+
+```bash
+docker compose down -v     # stop Neo4j AND delete all stored data
+python load_data.py        # next time: start Neo4j again, then reload the sample data
+```
+
+**Coming back later:** start Docker Desktop, then `cd neo4j && docker compose up -d`, activate the environment (`source .venv/bin/activate`), make sure Ollama is running, and run `streamlit run streamlit_app.py`. You do not need to reinstall anything or reload the data unless you used `down -v`.
 
 ## Example questions
 
@@ -248,6 +264,93 @@ RETURN DISTINCT downstream.name,
        [l IN labels(downstream) WHERE l <> "Entity"][0] AS layer
 ORDER BY layer, downstream.name;
 ```
+
+## Sample Cypher queries
+
+Open Neo4j Browser at http://localhost:7474 (login `neo4j` / `password123`) and paste these one at a time. They use the real labels and relationships in the graph (`HLR`, `LLR`, `SystemRequirement`, `Verification`, `DERIVES_FROM`, `VERIFIES`, ...).
+
+**1. The whole graph**
+
+```cypher
+MATCH (n)-[r]->(m) RETURN n, r, m
+```
+
+**2. All high-level requirements**
+
+```cypher
+MATCH (h:HLR) RETURN h
+```
+
+**3. Low-level requirements derived from one high-level requirement** (HLR-001 has LLR-001, LLR-002 and LLR-003)
+
+```cypher
+MATCH (l:LLR)-[:DERIVES_FROM]->(:HLR {name: "HLR-001"})
+RETURN l.name, l.text
+```
+
+**4. Two hops: low-level requirements that serve one system requirement** (through their high-level requirements)
+
+```cypher
+MATCH (l:LLR)-[:DERIVES_FROM]->(h:HLR)-[:DERIVES_FROM]->(s:SystemRequirement {name: "SYS-004"})
+RETURN l.name, h.name, s.text
+```
+
+**5. Full lineage of a requirement, back to the customer request**
+
+```cypher
+MATCH p = (:LLR {name: "LLR-007"})-[:DERIVES_FROM*]->(:CustomerRequest)
+RETURN p
+```
+
+**6. Verification evidence and what it verifies**
+
+```cypher
+MATCH (v:Verification)-[:VERIFIES]->(h:HLR)
+RETURN v.name, v.status, h.name
+ORDER BY v.name, h.name
+```
+
+**7. High-level requirements with no verification** (expect HLR-003, -007, -009, -010, -022)
+
+```cypher
+MATCH (h:HLR)
+WHERE NOT (:Verification)-[:VERIFIES]->(h)
+RETURN h.name, h.text ORDER BY h.name
+```
+
+**8. Requirements in tension** (expect HLR-007 / HLR-018 and LLR-017 / LLR-018)
+
+```cypher
+MATCH (a)-[:CONFLICTS_WITH]-(b)
+WHERE a.name < b.name
+RETURN a.name, a.text, b.name, b.text
+```
+
+**9. Artefacts still in draft**
+
+```cypher
+MATCH (n:Entity {status: "draft"})
+RETURN n.name, n.text ORDER BY n.name
+```
+
+**10. Artefacts with no traceability or verification links at all** (expect CR-004 and LLR-099)
+
+```cypher
+MATCH (n:Entity)
+WHERE NOT (n)-[:DERIVES_FROM|VERIFIES]-()
+RETURN n.name, n.text
+```
+
+**11. Artefacts with more than one parent** (the case a tree cannot represent)
+
+```cypher
+MATCH (n:Entity)-[r:DERIVES_FROM]->()
+WITH n, count(r) AS parents
+WHERE parents > 1
+RETURN n.name, parents ORDER BY parents DESC, n.name
+```
+
+More views (single layers, dependency chains, bottlenecks) are in [`neo4j/layer_views.cypher`](neo4j/layer_views.cypher).
 
 ## Project layout
 
