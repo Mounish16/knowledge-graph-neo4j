@@ -1,0 +1,13 @@
+# Talking to a real Neo4j server needs its official Python driver -- this is
+# the one place in the whole project that isn't dependency-free, because
+# there's no vanilla way to speak the Bolt protocol.
+neo4j>=5.14,<7
+
+# llm_qa.py talks to a LOCAL model through Ollama's HTTP API using only
+# Python's built-in urllib -- no pip package needed for that part at all.
+# The actual model runs as a separate free local program: see
+# https://ollama.com/download (not a pip install, so it's not listed here).
+
+# streamlit_app.py is a web UI wrapping the same llm_qa.py logic -- this is
+# the one other real dependency in this folder, alongside neo4j itself.
+streamlit>=1.35,<2
