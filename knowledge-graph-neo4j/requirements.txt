@@ -1,4 +1,0 @@
-# No third-party dependencies.
-# Everything in this project (knowledge_graph.py, rules.py, viz.py) is built
-# purely with the Python standard library (json, collections, dataclasses,
-# typing) so this file is intentionally empty.
