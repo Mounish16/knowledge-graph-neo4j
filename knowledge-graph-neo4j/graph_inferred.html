@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Requirements Traceability (including inferred links)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0f1115; font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; }
+  #wrap { position: relative; width: 100%; height: 100%; }
+  canvas { display: block; cursor: grab; }
+  #title {
+    position: absolute; top: 16px; left: 20px; color: #e8eaed;
+    font-size: 18px; font-weight: 600; letter-spacing: 0.2px;
+  }
+  #legend {
+    position: absolute; bottom: 16px; left: 20px; color: #cfd2d6; font-size: 12px;
+    background: rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 8px;
+    line-height: 1.6;
+  }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  #tooltip {
+    position: absolute; pointer-events: none; background: #1c1f26; color: #f1f3f5;
+    border: 1px solid #3a3f4b; padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    display: none; max-width: 260px;
+  }
+  #hint { position: absolute; top: 16px; right: 20px; color: #8b909a; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="title">Requirements Traceability (including inferred links)</div>
+  <div id="hint">drag nodes &middot; scroll to zoom &middot; drag background to pan</div>
+  <div id="legend"></div>
+  <div id="tooltip"></div>
+</div>
+<script>
+const DATA = {"nodes": [{"id": "CR-001", "label": "CR-001", "color": "#E03131", "type": "customer_request"}, {"id": "CR-002", "label": "CR-002", "color": "#E03131", "type": "customer_request"}, {"id": "CR-003", "label": "CR-003", "color": "#E03131", "type": "customer_request"}, {"id": "CR-004", "label": "CR-004", "color": "#E03131", "type": "customer_request"}, {"id": "CR-005", "label": "CR-005", "color": "#E03131", "type": "customer_request"}, {"id": "CR-006", "label": "CR-006", "color": "#E03131", "type": "customer_request"}, {"id": "HLD-001", "label": "HLD-001", "color": "#1971C2", "type": "hld"}, {"id": "HLD-002", "label": "HLD-002", "color": "#1971C2", "type": "hld"}, {"id": "HLD-003", "label": "HLD-003", "color": "#1971C2", "type": "hld"}, {"id": "HLD-004", "label": "HLD-004", "color": "#1971C2", "type": "hld"}, {"id": "HLD-005", "label": "HLD-005", "color": "#1971C2", "type": "hld"}, {"id": "HLR-001", "label": "HLR-001", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-002", "label": "HLR-002", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-003", "label": "HLR-003", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-005", "label": "HLR-005", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-007", "label": "HLR-007", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-009", "label": "HLR-009", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-010", "label": "HLR-010", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-013", "label": "HLR-013", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-014", "label": "HLR-014", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-018", "label": "HLR-018", "color": "#2F9E44", "type": "hlr"}, {"id": "HLR-022", "label": "HLR-022", "color": "#2F9E44", "type": "hlr"}, {"id": "LLD-001", "label": "LLD-001", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-002", "label": "LLD-002", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-003", "label": "LLD-003", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-004", "label": "LLD-004", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-005", "label": "LLD-005", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-006", "label": "LLD-006", "color": "#4C6EF5", "type": "lld"}, {"id": "LLD-007", "label": "LLD-007", "color": "#4C6EF5", "type": "lld"}, {"id": "LLR-001", "label": "LLR-001", "color": "#66A80F", "type": "llr"}, {"id": "LLR-002", "label": "LLR-002", "color": "#66A80F", "type": "llr"}, {"id": "LLR-003", "label": "LLR-003", "color": "#66A80F", "type": "llr"}, {"id": "LLR-004", "label": "LLR-004", "color": "#66A80F", "type": "llr"}, {"id": "LLR-005", "label": "LLR-005", "color": "#66A80F", "type": "llr"}, {"id": "LLR-007", "label": "LLR-007", "color": "#66A80F", "type": "llr"}, {"id": "LLR-008", "label": "LLR-008", "color": "#66A80F", "type": "llr"}, {"id": "LLR-011", "label": "LLR-011", "color": "#66A80F", "type": "llr"}, {"id": "LLR-013", "label": "LLR-013", "color": "#66A80F", "type": "llr"}, {"id": "LLR-017", "label": "LLR-017", "color": "#66A80F", "type": "llr"}, {"id": "LLR-018", "label": "LLR-018", "color": "#66A80F", "type": "llr"}, {"id": "LLR-021", "label": "LLR-021", "color": "#66A80F", "type": "llr"}, {"id": "LLR-023", "label": "LLR-023", "color": "#66A80F", "type": "llr"}, {"id": "LLR-024", "label": "LLR-024", "color": "#66A80F", "type": "llr"}, {"id": "LLR-025", "label": "LLR-025", "color": "#66A80F", "type": "llr"}, {"id": "LLR-031", "label": "LLR-031", "color": "#66A80F", "type": "llr"}, {"id": "LLR-099", "label": "LLR-099", "color": "#66A80F", "type": "llr"}, {"id": "MOD-001", "label": "MOD-001", "color": "#7048E8", "type": "module_design"}, {"id": "MOD-002", "label": "MOD-002", "color": "#7048E8", "type": "module_design"}, {"id": "MOD-003", "label": "MOD-003", "color": "#7048E8", "type": "module_design"}, {"id": "SAF-001", "label": "SAF-001", "color": "#C2255C", "type": "safety_requirement"}, {"id": "SAF-002", "label": "SAF-002", "color": "#C2255C", "type": "safety_requirement"}, {"id": "SAF-003", "label": "SAF-003", "color": "#C2255C", "type": "safety_requirement"}, {"id": "SAF-004", "label": "SAF-004", "color": "#C2255C", "type": "safety_requirement"}, {"id": "SN-001", "label": "SN-001", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SN-002", "label": "SN-002", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SN-003", "label": "SN-003", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SN-004", "label": "SN-004", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SN-007", "label": "SN-007", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SN-009", "label": "SN-009", "color": "#F76707", "type": "stakeholder_need"}, {"id": "SYS-001", "label": "SYS-001", "color": "#F59F00", "type": "system_requirement"}, {"id": "SYS-002", "label": "SYS-002", "color": "#F59F00", "type": "system_requirement"}, {"id": "SYS-004", "label": "SYS-004", "color": "#F59F00", "type": "system_requirement"}, {"id": "SYS-006", "label": "SYS-006", "color": "#F59F00", "type": "system_requirement"}, {"id": "SYS-007", "label": "SYS-007", "color": "#F59F00", "type": "system_requirement"}, {"id": "VER-001", "label": "VER-001", "color": "#0CA678", "type": "verification"}, {"id": "VER-002", "label": "VER-002", "color": "#0CA678", "type": "verification"}, {"id": "VER-003", "label": "VER-003", "color": "#0CA678", "type": "verification"}, {"id": "VER-004", "label": "VER-004", "color": "#0CA678", "type": "verification"}], "links": [{"source": "CR-001", "target": "SN-001", "label": "impacts"}, {"source": "CR-001", "target": "SN-003", "label": "impacts"}, {"source": "CR-001", "target": "SN-004", "label": "impacts"}, {"source": "CR-002", "target": "SN-002", "label": "impacts"}, {"source": "CR-003", "target": "SN-009", "label": "impacts"}, {"source": "CR-005", "target": "SN-007", "label": "impacts"}, {"source": "CR-006", "target": "HLR-005", "label": "impacts"}, {"source": "HLD-001", "target": "LLR-001", "label": "derives_from"}, {"source": "HLD-001", "target": "LLR-004", "label": "derives_from"}, {"source": "HLD-001", "target": "LLD-001", "label": "impacts"}, {"source": "HLD-001", "target": "LLD-002", "label": "impacts"}, {"source": "HLD-001", "target": "LLD-003", "label": "impacts"}, {"source": "HLD-001", "target": "CR-001", "label": "traces_to"}, {"source": "HLD-001", "target": "HLR-001", "label": "traces_to"}, {"source": "HLD-001", "target": "HLR-002", "label": "traces_to"}, {"source": "HLD-001", "target": "LLR-001", "label": "traces_to"}, {"source": "HLD-001", "target": "LLR-004", "label": "traces_to"}, {"source": "HLD-001", "target": "SN-001", "label": "traces_to"}, {"source": "HLD-001", "target": "SYS-004", "label": "traces_to"}, {"source": "HLD-002", "target": "LLR-011", "label": "derives_from"}, {"source": "HLD-002", "target": "LLR-013", "label": "derives_from"}, {"source": "HLD-002", "target": "LLD-004", "label": "impacts"}, {"source": "HLD-002", "target": "CR-002", "label": "traces_to"}, {"source": "HLD-002", "target": "CR-006", "label": "traces_to"}, {"source": "HLD-002", "target": "HLR-005", "label": "traces_to"}, {"source": "HLD-002", "target": "LLR-011", "label": "traces_to"}, {"source": "HLD-002", "target": "LLR-013", "label": "traces_to"}, {"source": "HLD-002", "target": "SN-002", "label": "traces_to"}, {"source": "HLD-002", "target": "SYS-002", "label": "traces_to"}, {"source": "HLD-003", "target": "LLR-017", "label": "derives_from"}, {"source": "HLD-003", "target": "LLD-005", "label": "impacts"}, {"source": "HLD-003", "target": "CR-002", "label": "traces_to"}, {"source": "HLD-003", "target": "HLR-007", "label": "traces_to"}, {"source": "HLD-003", "target": "LLR-017", "label": "traces_to"}, {"source": "HLD-003", "target": "SN-002", "label": "traces_to"}, {"source": "HLD-003", "target": "SYS-002", "label": "traces_to"}, {"source": "HLD-004", "target": "LLR-021", "label": "derives_from"}, {"source": "HLD-004", "target": "LLD-006", "label": "impacts"}, {"source": "HLD-004", "target": "CR-001", "label": "traces_to"}, {"source": "HLD-004", "target": "HLR-009", "label": "traces_to"}, {"source": "HLD-004", "target": "LLR-021", "label": "traces_to"}, {"source": "HLD-004", "target": "SN-004", "label": "traces_to"}, {"source": "HLD-004", "target": "SYS-007", "label": "traces_to"}, {"source": "HLD-005", "target": "LLR-024", "label": "derives_from"}, {"source": "HLD-005", "target": "LLD-007", "label": "impacts"}, {"source": "HLD-005", "target": "CR-005", "label": "traces_to"}, {"source": "HLD-005", "target": "HLR-013", "label": "traces_to"}, {"source": "HLD-005", "target": "LLR-024", "label": "traces_to"}, {"source": "HLD-005", "target": "SAF-002", "label": "traces_to"}, {"source": "HLD-005", "target": "SN-007", "label": "traces_to"}, {"source": "HLR-001", "target": "SYS-004", "label": "derives_from"}, {"source": "HLR-001", "target": "LLR-001", "label": "impacts"}, {"source": "HLR-001", "target": "LLR-002", "label": "impacts"}, {"source": "HLR-001", "target": "LLR-003", "label": "impacts"}, {"source": "HLR-001", "target": "CR-001", "label": "traces_to"}, {"source": "HLR-001", "target": "SN-001", "label": "traces_to"}, {"source": "HLR-001", "target": "SYS-004", "label": "traces_to"}, {"source": "HLR-002", "target": "SYS-004", "label": "derives_from"}, {"source": "HLR-002", "target": "LLR-004", "label": "impacts"}, {"source": "HLR-002", "target": "LLR-005", "label": "impacts"}, {"source": "HLR-002", "target": "CR-001", "label": "traces_to"}, {"source": "HLR-002", "target": "SN-001", "label": "traces_to"}, {"source": "HLR-002", "target": "SYS-004", "label": "traces_to"}, {"source": "HLR-003", "target": "HLR-001", "label": "depends_on"}, {"source": "HLR-003", "target": "HLR-002", "label": "depends_on"}, {"source": "HLR-003", "target": "SYS-002", "label": "derives_from"}, {"source": "HLR-003", "target": "LLR-007", "label": "impacts"}, {"source": "HLR-003", "target": "LLR-008", "label": "impacts"}, {"source": "HLR-003", "target": "HLR-001", "label": "requires"}, {"source": "HLR-003", "target": "HLR-002", "label": "requires"}, {"source": "HLR-003", "target": "CR-002", "label": "traces_to"}, {"source": "HLR-003", "target": "SN-002", "label": "traces_to"}, {"source": "HLR-003", "target": "SYS-002", "label": "traces_to"}, {"source": "HLR-005", "target": "CR-006", "label": "derives_from"}, {"source": "HLR-005", "target": "SYS-002", "label": "derives_from"}, {"source": "HLR-005", "target": "LLR-011", "label": "impacts"}, {"source": "HLR-005", "target": "LLR-013", "label": "impacts"}, {"source": "HLR-005", "target": "CR-002", "label": "traces_to"}, {"source": "HLR-005", "target": "CR-006", "label": "traces_to"}, {"source": "HLR-005", "target": "SN-002", "label": "traces_to"}, {"source": "HLR-005", "target": "SYS-002", "label": "traces_to"}, {"source": "HLR-007", "target": "HLR-018", "label": "conflicts_with"}, {"source": "HLR-007", "target": "HLR-003", "label": "depends_on"}, {"source": "HLR-007", "target": "HLR-005", "label": "depends_on"}, {"source": "HLR-007", "target": "SYS-002", "label": "derives_from"}, {"source": "HLR-007", "target": "LLR-017", "label": "impacts"}, {"source": "HLR-007", "target": "LLR-018", "label": "impacts"}, {"source": "HLR-007", "target": "HLR-001", "label": "requires"}, {"source": "HLR-007", "target": "HLR-002", "label": "requires"}, {"source": "HLR-007", "target": "HLR-003", "label": "requires"}, {"source": "HLR-007", "target": "HLR-005", "label": "requires"}, {"source": "HLR-007", "target": "CR-002", "label": "traces_to"}, {"source": "HLR-007", "target": "SN-002", "label": "traces_to"}, {"source": "HLR-007", "target": "SYS-002", "label": "traces_to"}, {"source": "HLR-009", "target": "SYS-007", "label": "derives_from"}, {"source": "HLR-009", "target": "LLR-021", "label": "impacts"}, {"source": "HLR-009", "target": "LLR-023", "label": "impacts"}, {"source": "HLR-009", "target": "CR-001", "label": "traces_to"}, {"source": "HLR-009", "target": "SN-004", "label": "traces_to"}, {"source": "HLR-009", "target": "SYS-007", "label": "traces_to"}, {"source": "HLR-010", "target": "HLR-009", "label": "depends_on"}, {"source": "HLR-010", "target": "SYS-007", "label": "derives_from"}, {"source": "HLR-010", "target": "HLR-009", "label": "requires"}, {"source": "HLR-010", "target": "CR-001", "label": "traces_to"}, {"source": "HLR-010", "target": "SN-004", "label": "traces_to"}, {"source": "HLR-010", "target": "SYS-007", "label": "traces_to"}, {"source": "HLR-013", "target": "SAF-002", "label": "derives_from"}, {"source": "HLR-013", "target": "LLR-024", "label": "impacts"}, {"source": "HLR-013", "target": "CR-005", "label": "traces_to"}, {"source": "HLR-013", "target": "SAF-002", "label": "traces_to"}, {"source": "HLR-013", "target": "SN-007", "label": "traces_to"}, {"source": "HLR-014", "target": "HLR-013", "label": "depends_on"}, {"source": "HLR-014", "target": "SAF-003", "label": "derives_from"}, {"source": "HLR-014", "target": "LLR-025", "label": "impacts"}, {"source": "HLR-014", "target": "HLR-013", "label": "requires"}, {"source": "HLR-014", "target": "CR-005", "label": "traces_to"}, {"source": "HLR-014", "target": "SAF-003", "label": "traces_to"}, {"source": "HLR-014", "target": "SN-007", "label": "traces_to"}, {"source": "HLR-018", "target": "HLR-007", "label": "conflicts_with"}, {"source": "HLR-018", "target": "SYS-006", "label": "derives_from"}, {"source": "HLR-018", "target": "LLR-031", "label": "impacts"}, {"source": "HLR-018", "target": "CR-001", "label": "traces_to"}, {"source": "HLR-018", "target": "SN-003", "label": "traces_to"}, {"source": "HLR-018", "target": "SYS-006", "label": "traces_to"}, {"source": "HLR-022", "target": "HLR-005", "label": "depends_on"}, {"source": "HLR-022", "target": "HLR-013", "label": "depends_on"}, {"source": "HLR-022", "target": "SAF-004", "label": "derives_from"}, {"source": "HLR-022", "target": "HLR-005", "label": "requires"}, {"source": "HLR-022", "target": "HLR-013", "label": "requires"}, {"source": "HLR-022", "target": "CR-005", "label": "traces_to"}, {"source": "HLR-022", "target": "SAF-004", "label": "traces_to"}, {"source": "HLR-022", "target": "SN-007", "label": "traces_to"}, {"source": "LLD-001", "target": "HLD-001", "label": "derives_from"}, {"source": "LLD-001", "target": "MOD-001", "label": "impacts"}, {"source": "LLD-001", "target": "CR-001", "label": "traces_to"}, {"source": "LLD-001", "target": "HLD-001", "label": "traces_to"}, {"source": "LLD-001", "target": "HLR-001", "label": "traces_to"}, {"source": "LLD-001", "target": "HLR-002", "label": "traces_to"}, {"source": "LLD-001", "target": "LLR-001", "label": "traces_to"}, {"source": "LLD-001", "target": "LLR-004", "label": "traces_to"}, {"source": "LLD-001", "target": "SN-001", "label": "traces_to"}, {"source": "LLD-001", "target": "SYS-004", "label": "traces_to"}, {"source": "LLD-002", "target": "HLD-001", "label": "derives_from"}, {"source": "LLD-002", "target": "MOD-001", "label": "impacts"}, {"source": "LLD-002", "target": "CR-001", "label": "traces_to"}, {"source": "LLD-002", "target": "HLD-001", "label": "traces_to"}, {"source": "LLD-002", "target": "HLR-001", "label": "traces_to"}, {"source": "LLD-002", "target": "HLR-002", "label": "traces_to"}, {"source": "LLD-002", "target": "LLR-001", "label": "traces_to"}, {"source": "LLD-002", "target": "LLR-004", "label": "traces_to"}, {"source": "LLD-002", "target": "SN-001", "label": "traces_to"}, {"source": "LLD-002", "target": "SYS-004", "label": "traces_to"}, {"source": "LLD-003", "target": "HLD-001", "label": "derives_from"}, {"source": "LLD-003", "target": "MOD-001", "label": "impacts"}, {"source": "LLD-003", "target": "CR-001", "label": "traces_to"}, {"source": "LLD-003", "target": "HLD-001", "label": "traces_to"}, {"source": "LLD-003", "target": "HLR-001", "label": "traces_to"}, {"source": "LLD-003", "target": "HLR-002", "label": "traces_to"}, {"source": "LLD-003", "target": "LLR-001", "label": "traces_to"}, {"source": "LLD-003", "target": "LLR-004", "label": "traces_to"}, {"source": "LLD-003", "target": "SN-001", "label": "traces_to"}, {"source": "LLD-003", "target": "SYS-004", "label": "traces_to"}, {"source": "LLD-004", "target": "HLD-002", "label": "derives_from"}, {"source": "LLD-004", "target": "MOD-002", "label": "impacts"}, {"source": "LLD-004", "target": "CR-002", "label": "traces_to"}, {"source": "LLD-004", "target": "CR-006", "label": "traces_to"}, {"source": "LLD-004", "target": "HLD-002", "label": "traces_to"}, {"source": "LLD-004", "target": "HLR-005", "label": "traces_to"}, {"source": "LLD-004", "target": "LLR-011", "label": "traces_to"}, {"source": "LLD-004", "target": "LLR-013", "label": "traces_to"}, {"source": "LLD-004", "target": "SN-002", "label": "traces_to"}, {"source": "LLD-004", "target": "SYS-002", "label": "traces_to"}, {"source": "LLD-005", "target": "HLD-003", "label": "derives_from"}, {"source": "LLD-005", "target": "MOD-002", "label": "impacts"}, {"source": "LLD-005", "target": "CR-002", "label": "traces_to"}, {"source": "LLD-005", "target": "HLD-003", "label": "traces_to"}, {"source": "LLD-005", "target": "HLR-007", "label": "traces_to"}, {"source": "LLD-005", "target": "LLR-017", "label": "traces_to"}, {"source": "LLD-005", "target": "SN-002", "label": "traces_to"}, {"source": "LLD-005", "target": "SYS-002", "label": "traces_to"}, {"source": "LLD-006", "target": "HLD-004", "label": "derives_from"}, {"source": "LLD-006", "target": "CR-001", "label": "traces_to"}, {"source": "LLD-006", "target": "HLD-004", "label": "traces_to"}, {"source": "LLD-006", "target": "HLR-009", "label": "traces_to"}, {"source": "LLD-006", "target": "LLR-021", "label": "traces_to"}, {"source": "LLD-006", "target": "SN-004", "label": "traces_to"}, {"source": "LLD-006", "target": "SYS-007", "label": "traces_to"}, {"source": "LLD-007", "target": "HLD-005", "label": "derives_from"}, {"source": "LLD-007", "target": "MOD-003", "label": "impacts"}, {"source": "LLD-007", "target": "CR-005", "label": "traces_to"}, {"source": "LLD-007", "target": "HLD-005", "label": "traces_to"}, {"source": "LLD-007", "target": "HLR-013", "label": "traces_to"}, {"source": "LLD-007", "target": "LLR-024", "label": "traces_to"}, {"source": "LLD-007", "target": "SAF-002", "label": "traces_to"}, {"source": "LLD-007", "target": "SN-007", "label": "traces_to"}, {"source": "LLR-001", "target": "HLR-001", "label": "derives_from"}, {"source": "LLR-001", "target": "HLD-001", "label": "impacts"}, {"source": "LLR-001", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-001", "target": "HLR-001", "label": "traces_to"}, {"source": "LLR-001", "target": "SN-001", "label": "traces_to"}, {"source": "LLR-001", "target": "SYS-004", "label": "traces_to"}, {"source": "LLR-002", "target": "LLR-001", "label": "depends_on"}, {"source": "LLR-002", "target": "HLR-001", "label": "derives_from"}, {"source": "LLR-002", "target": "LLR-001", "label": "requires"}, {"source": "LLR-002", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-002", "target": "HLR-001", "label": "traces_to"}, {"source": "LLR-002", "target": "SN-001", "label": "traces_to"}, {"source": "LLR-002", "target": "SYS-004", "label": "traces_to"}, {"source": "LLR-003", "target": "LLR-002", "label": "depends_on"}, {"source": "LLR-003", "target": "HLR-001", "label": "derives_from"}, {"source": "LLR-003", "target": "LLR-001", "label": "requires"}, {"source": "LLR-003", "target": "LLR-002", "label": "requires"}, {"source": "LLR-003", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-003", "target": "HLR-001", "label": "traces_to"}, {"source": "LLR-003", "target": "SN-001", "label": "traces_to"}, {"source": "LLR-003", "target": "SYS-004", "label": "traces_to"}, {"source": "LLR-004", "target": "HLR-002", "label": "derives_from"}, {"source": "LLR-004", "target": "HLD-001", "label": "impacts"}, {"source": "LLR-004", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-004", "target": "HLR-002", "label": "traces_to"}, {"source": "LLR-004", "target": "SN-001", "label": "traces_to"}, {"source": "LLR-004", "target": "SYS-004", "label": "traces_to"}, {"source": "LLR-005", "target": "LLR-004", "label": "depends_on"}, {"source": "LLR-005", "target": "HLR-002", "label": "derives_from"}, {"source": "LLR-005", "target": "LLR-004", "label": "requires"}, {"source": "LLR-005", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-005", "target": "HLR-002", "label": "traces_to"}, {"source": "LLR-005", "target": "SN-001", "label": "traces_to"}, {"source": "LLR-005", "target": "SYS-004", "label": "traces_to"}, {"source": "LLR-007", "target": "LLR-003", "label": "depends_on"}, {"source": "LLR-007", "target": "LLR-004", "label": "depends_on"}, {"source": "LLR-007", "target": "HLR-003", "label": "derives_from"}, {"source": "LLR-007", "target": "LLR-001", "label": "requires"}, {"source": "LLR-007", "target": "LLR-002", "label": "requires"}, {"source": "LLR-007", "target": "LLR-003", "label": "requires"}, {"source": "LLR-007", "target": "LLR-004", "label": "requires"}, {"source": "LLR-007", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-007", "target": "HLR-003", "label": "traces_to"}, {"source": "LLR-007", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-007", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-008", "target": "LLR-007", "label": "depends_on"}, {"source": "LLR-008", "target": "HLR-003", "label": "derives_from"}, {"source": "LLR-008", "target": "LLR-001", "label": "requires"}, {"source": "LLR-008", "target": "LLR-002", "label": "requires"}, {"source": "LLR-008", "target": "LLR-003", "label": "requires"}, {"source": "LLR-008", "target": "LLR-004", "label": "requires"}, {"source": "LLR-008", "target": "LLR-007", "label": "requires"}, {"source": "LLR-008", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-008", "target": "HLR-003", "label": "traces_to"}, {"source": "LLR-008", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-008", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-011", "target": "HLR-005", "label": "derives_from"}, {"source": "LLR-011", "target": "HLD-002", "label": "impacts"}, {"source": "LLR-011", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-011", "target": "CR-006", "label": "traces_to"}, {"source": "LLR-011", "target": "HLR-005", "label": "traces_to"}, {"source": "LLR-011", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-011", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-013", "target": "LLR-011", "label": "depends_on"}, {"source": "LLR-013", "target": "HLR-005", "label": "derives_from"}, {"source": "LLR-013", "target": "HLD-002", "label": "impacts"}, {"source": "LLR-013", "target": "LLR-011", "label": "requires"}, {"source": "LLR-013", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-013", "target": "CR-006", "label": "traces_to"}, {"source": "LLR-013", "target": "HLR-005", "label": "traces_to"}, {"source": "LLR-013", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-013", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-017", "target": "LLR-018", "label": "conflicts_with"}, {"source": "LLR-017", "target": "LLR-013", "label": "depends_on"}, {"source": "LLR-017", "target": "LLR-031", "label": "depends_on"}, {"source": "LLR-017", "target": "HLR-007", "label": "derives_from"}, {"source": "LLR-017", "target": "HLD-003", "label": "impacts"}, {"source": "LLR-017", "target": "LLR-011", "label": "requires"}, {"source": "LLR-017", "target": "LLR-013", "label": "requires"}, {"source": "LLR-017", "target": "LLR-031", "label": "requires"}, {"source": "LLR-017", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-017", "target": "HLR-007", "label": "traces_to"}, {"source": "LLR-017", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-017", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-018", "target": "LLR-017", "label": "conflicts_with"}, {"source": "LLR-018", "target": "LLR-017", "label": "depends_on"}, {"source": "LLR-018", "target": "HLR-007", "label": "derives_from"}, {"source": "LLR-018", "target": "LLR-011", "label": "requires"}, {"source": "LLR-018", "target": "LLR-013", "label": "requires"}, {"source": "LLR-018", "target": "LLR-017", "label": "requires"}, {"source": "LLR-018", "target": "LLR-031", "label": "requires"}, {"source": "LLR-018", "target": "CR-002", "label": "traces_to"}, {"source": "LLR-018", "target": "HLR-007", "label": "traces_to"}, {"source": "LLR-018", "target": "SN-002", "label": "traces_to"}, {"source": "LLR-018", "target": "SYS-002", "label": "traces_to"}, {"source": "LLR-021", "target": "HLR-009", "label": "derives_from"}, {"source": "LLR-021", "target": "HLD-004", "label": "impacts"}, {"source": "LLR-021", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-021", "target": "HLR-009", "label": "traces_to"}, {"source": "LLR-021", "target": "SN-004", "label": "traces_to"}, {"source": "LLR-021", "target": "SYS-007", "label": "traces_to"}, {"source": "LLR-023", "target": "LLR-021", "label": "depends_on"}, {"source": "LLR-023", "target": "HLR-009", "label": "derives_from"}, {"source": "LLR-023", "target": "LLR-021", "label": "requires"}, {"source": "LLR-023", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-023", "target": "HLR-009", "label": "traces_to"}, {"source": "LLR-023", "target": "SN-004", "label": "traces_to"}, {"source": "LLR-023", "target": "SYS-007", "label": "traces_to"}, {"source": "LLR-024", "target": "HLR-013", "label": "derives_from"}, {"source": "LLR-024", "target": "HLD-005", "label": "impacts"}, {"source": "LLR-024", "target": "CR-005", "label": "traces_to"}, {"source": "LLR-024", "target": "HLR-013", "label": "traces_to"}, {"source": "LLR-024", "target": "SAF-002", "label": "traces_to"}, {"source": "LLR-024", "target": "SN-007", "label": "traces_to"}, {"source": "LLR-025", "target": "LLR-024", "label": "depends_on"}, {"source": "LLR-025", "target": "HLR-014", "label": "derives_from"}, {"source": "LLR-025", "target": "LLR-024", "label": "requires"}, {"source": "LLR-025", "target": "CR-005", "label": "traces_to"}, {"source": "LLR-025", "target": "HLR-014", "label": "traces_to"}, {"source": "LLR-025", "target": "SAF-003", "label": "traces_to"}, {"source": "LLR-025", "target": "SN-007", "label": "traces_to"}, {"source": "LLR-031", "target": "HLR-018", "label": "derives_from"}, {"source": "LLR-031", "target": "CR-001", "label": "traces_to"}, {"source": "LLR-031", "target": "HLR-018", "label": "traces_to"}, {"source": "LLR-031", "target": "SN-003", "label": "traces_to"}, {"source": "LLR-031", "target": "SYS-006", "label": "traces_to"}, {"source": "MOD-001", "target": "LLD-001", "label": "derives_from"}, {"source": "MOD-001", "target": "LLD-002", "label": "derives_from"}, {"source": "MOD-001", "target": "LLD-003", "label": "derives_from"}, {"source": "MOD-001", "target": "HLR-001", "label": "implements"}, {"source": "MOD-001", "target": "HLR-002", "label": "implements"}, {"source": "MOD-001", "target": "CR-001", "label": "traces_to"}, {"source": "MOD-001", "target": "HLD-001", "label": "traces_to"}, {"source": "MOD-001", "target": "HLR-001", "label": "traces_to"}, {"source": "MOD-001", "target": "HLR-002", "label": "traces_to"}, {"source": "MOD-001", "target": "LLD-001", "label": "traces_to"}, {"source": "MOD-001", "target": "LLD-002", "label": "traces_to"}, {"source": "MOD-001", "target": "LLD-003", "label": "traces_to"}, {"source": "MOD-001", "target": "LLR-001", "label": "traces_to"}, {"source": "MOD-001", "target": "LLR-004", "label": "traces_to"}, {"source": "MOD-001", "target": "SN-001", "label": "traces_to"}, {"source": "MOD-001", "target": "SYS-004", "label": "traces_to"}, {"source": "MOD-002", "target": "LLD-004", "label": "derives_from"}, {"source": "MOD-002", "target": "LLD-005", "label": "derives_from"}, {"source": "MOD-002", "target": "HLR-005", "label": "implements"}, {"source": "MOD-002", "target": "HLR-007", "label": "implements"}, {"source": "MOD-002", "target": "CR-002", "label": "traces_to"}, {"source": "MOD-002", "target": "CR-006", "label": "traces_to"}, {"source": "MOD-002", "target": "HLD-002", "label": "traces_to"}, {"source": "MOD-002", "target": "HLD-003", "label": "traces_to"}, {"source": "MOD-002", "target": "HLR-005", "label": "traces_to"}, {"source": "MOD-002", "target": "HLR-007", "label": "traces_to"}, {"source": "MOD-002", "target": "LLD-004", "label": "traces_to"}, {"source": "MOD-002", "target": "LLD-005", "label": "traces_to"}, {"source": "MOD-002", "target": "LLR-011", "label": "traces_to"}, {"source": "MOD-002", "target": "LLR-013", "label": "traces_to"}, {"source": "MOD-002", "target": "LLR-017", "label": "traces_to"}, {"source": "MOD-002", "target": "SN-002", "label": "traces_to"}, {"source": "MOD-002", "target": "SYS-002", "label": "traces_to"}, {"source": "MOD-003", "target": "LLD-007", "label": "derives_from"}, {"source": "MOD-003", "target": "HLR-013", "label": "implements"}, {"source": "MOD-003", "target": "CR-005", "label": "traces_to"}, {"source": "MOD-003", "target": "HLD-005", "label": "traces_to"}, {"source": "MOD-003", "target": "HLR-013", "label": "traces_to"}, {"source": "MOD-003", "target": "LLD-007", "label": "traces_to"}, {"source": "MOD-003", "target": "LLR-024", "label": "traces_to"}, {"source": "MOD-003", "target": "SAF-002", "label": "traces_to"}, {"source": "MOD-003", "target": "SN-007", "label": "traces_to"}, {"source": "SAF-001", "target": "SN-007", "label": "derives_from"}, {"source": "SAF-001", "target": "CR-005", "label": "traces_to"}, {"source": "SAF-001", "target": "SN-007", "label": "traces_to"}, {"source": "SAF-002", "target": "SN-007", "label": "derives_from"}, {"source": "SAF-002", "target": "HLR-013", "label": "impacts"}, {"source": "SAF-002", "target": "CR-005", "label": "traces_to"}, {"source": "SAF-002", "target": "SN-007", "label": "traces_to"}, {"source": "SAF-003", "target": "SN-007", "label": "derives_from"}, {"source": "SAF-003", "target": "HLR-014", "label": "impacts"}, {"source": "SAF-003", "target": "CR-005", "label": "traces_to"}, {"source": "SAF-003", "target": "SN-007", "label": "traces_to"}, {"source": "SAF-004", "target": "SN-007", "label": "derives_from"}, {"source": "SAF-004", "target": "HLR-022", "label": "impacts"}, {"source": "SAF-004", "target": "CR-005", "label": "traces_to"}, {"source": "SAF-004", "target": "SN-007", "label": "traces_to"}, {"source": "SN-001", "target": "CR-001", "label": "derives_from"}, {"source": "SN-001", "target": "SYS-001", "label": "impacts"}, {"source": "SN-001", "target": "SYS-004", "label": "impacts"}, {"source": "SN-001", "target": "CR-001", "label": "traces_to"}, {"source": "SN-002", "target": "CR-002", "label": "derives_from"}, {"source": "SN-002", "target": "SYS-002", "label": "impacts"}, {"source": "SN-002", "target": "CR-002", "label": "traces_to"}, {"source": "SN-003", "target": "CR-001", "label": "derives_from"}, {"source": "SN-003", "target": "SYS-006", "label": "impacts"}, {"source": "SN-003", "target": "CR-001", "label": "traces_to"}, {"source": "SN-004", "target": "CR-001", "label": "derives_from"}, {"source": "SN-004", "target": "SYS-007", "label": "impacts"}, {"source": "SN-004", "target": "CR-001", "label": "traces_to"}, {"source": "SN-007", "target": "CR-005", "label": "derives_from"}, {"source": "SN-007", "target": "SAF-001", "label": "impacts"}, {"source": "SN-007", "target": "SAF-002", "label": "impacts"}, {"source": "SN-007", "target": "SAF-003", "label": "impacts"}, {"source": "SN-007", "target": "SAF-004", "label": "impacts"}, {"source": "SN-007", "target": "CR-005", "label": "traces_to"}, {"source": "SN-009", "target": "CR-003", "label": "derives_from"}, {"source": "SN-009", "target": "CR-003", "label": "traces_to"}, {"source": "SYS-001", "target": "SN-001", "label": "derives_from"}, {"source": "SYS-001", "target": "CR-001", "label": "traces_to"}, {"source": "SYS-001", "target": "SN-001", "label": "traces_to"}, {"source": "SYS-002", "target": "SN-002", "label": "derives_from"}, {"source": "SYS-002", "target": "HLR-003", "label": "impacts"}, {"source": "SYS-002", "target": "HLR-005", "label": "impacts"}, {"source": "SYS-002", "target": "HLR-007", "label": "impacts"}, {"source": "SYS-002", "target": "CR-002", "label": "traces_to"}, {"source": "SYS-002", "target": "SN-002", "label": "traces_to"}, {"source": "SYS-004", "target": "SN-001", "label": "derives_from"}, {"source": "SYS-004", "target": "HLR-001", "label": "impacts"}, {"source": "SYS-004", "target": "HLR-002", "label": "impacts"}, {"source": "SYS-004", "target": "CR-001", "label": "traces_to"}, {"source": "SYS-004", "target": "SN-001", "label": "traces_to"}, {"source": "SYS-006", "target": "SN-003", "label": "derives_from"}, {"source": "SYS-006", "target": "HLR-018", "label": "impacts"}, {"source": "SYS-006", "target": "CR-001", "label": "traces_to"}, {"source": "SYS-006", "target": "SN-003", "label": "traces_to"}, {"source": "SYS-007", "target": "SN-004", "label": "derives_from"}, {"source": "SYS-007", "target": "HLR-009", "label": "impacts"}, {"source": "SYS-007", "target": "HLR-010", "label": "impacts"}, {"source": "SYS-007", "target": "CR-001", "label": "traces_to"}, {"source": "SYS-007", "target": "SN-004", "label": "traces_to"}, {"source": "VER-001", "target": "HLR-001", "label": "verifies"}, {"source": "VER-001", "target": "HLR-002", "label": "verifies"}, {"source": "VER-002", "target": "HLR-018", "label": "verifies"}, {"source": "VER-003", "target": "HLR-013", "label": "verifies"}, {"source": "VER-003", "target": "HLR-014", "label": "verifies"}, {"source": "VER-004", "target": "HLR-005", "label": "verifies"}]};
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+const legendEl = document.getElementById('legend');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---- build node/link objects with simple physics state ----
+const nodesById = {};
+const nodes = DATA.nodes.map((n, i) => {
+  const angle = (i / DATA.nodes.length) * Math.PI * 2;
+  const node = {
+    ...n,
+    x: canvas.width / 2 + Math.cos(angle) * 150,
+    y: canvas.height / 2 + Math.sin(angle) * 150,
+    vx: 0, vy: 0,
+  };
+  nodesById[n.id] = node;
+  return node;
+});
+const links = DATA.links.map(l => ({ ...l, source: nodesById[l.source], target: nodesById[l.target] }));
+
+// legend, derived from distinct node types actually present
+const seenTypes = {};
+nodes.forEach(n => { seenTypes[n.type] = n.color; });
+legendEl.innerHTML = Object.entries(seenTypes)
+  .map(([type, color]) => `<div><span class="swatch" style="background:${color}"></span>${type}</div>`)
+  .join('');
+
+// ---- simple force simulation (repulsion + springs + centering) ----
+const REPULSION = 6000;
+const SPRING_LEN = 140;
+const SPRING_K = 0.02;
+const CENTER_K = 0.01;
+const DAMPING = 0.85;
+
+function step() {
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+
+  for (const n of nodes) {
+    if (n.dragging) continue;
+    let fx = 0, fy = 0;
+
+    // repulsion between all pairs
+    for (const other of nodes) {
+      if (other === n) continue;
+      let dx = n.x - other.x, dy = n.y - other.y;
+      let distSq = dx * dx + dy * dy || 0.01;
+      let dist = Math.sqrt(distSq);
+      let force = REPULSION / distSq;
+      fx += (dx / dist) * force;
+      fy += (dy / dist) * force;
+    }
+
+    // gentle pull toward center so the graph doesn't drift off-screen
+    fx += (cx - n.x) * CENTER_K;
+    fy += (cy - n.y) * CENTER_K;
+
+    n.vx = (n.vx + fx) * DAMPING;
+    n.vy = (n.vy + fy) * DAMPING;
+  }
+
+  // springs along edges
+  for (const l of links) {
+    let dx = l.target.x - l.source.x, dy = l.target.y - l.source.y;
+    let dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    let stretch = dist - SPRING_LEN;
+    let force = stretch * SPRING_K;
+    let fx = (dx / dist) * force, fy = (dy / dist) * force;
+    if (!l.source.dragging) { l.source.vx += fx; l.source.vy += fy; }
+    if (!l.target.dragging) { l.target.vx -= fx; l.target.vy -= fy; }
+  }
+
+  for (const n of nodes) {
+    if (n.dragging) continue;
+    n.x += n.vx * 0.06;
+    n.y += n.vy * 0.06;
+  }
+}
+
+// ---- camera (pan/zoom) ----
+const camera = { x: 0, y: 0, scale: 1 };
+
+function toScreen(x, y) {
+  return [(x + camera.x) * camera.scale, (y + camera.y) * camera.scale];
+}
+function toWorld(x, y) {
+  return [x / camera.scale - camera.x, y / camera.scale - camera.y];
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+
+  // links
+  ctx.lineWidth = 1;
+  for (const l of links) {
+    const [sx, sy] = toScreen(l.source.x, l.source.y);
+    const [tx, ty] = toScreen(l.target.x, l.target.y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+
+    // predicate label at midpoint
+    const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+    ctx.fillStyle = 'rgba(210,215,222,0.65)';
+    ctx.font = `${11 * camera.scale}px sans-serif`;
+    ctx.fillText(l.label, mx, my);
+  }
+
+  // nodes
+  for (const n of nodes) {
+    const [x, y] = toScreen(n.x, n.y);
+    const r = 10 * camera.scale;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = n.color;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.stroke();
+
+    ctx.fillStyle = '#f1f3f5';
+    ctx.font = `${12 * camera.scale}px sans-serif`;
+    ctx.fillText(n.label, x + r + 4, y + 4);
+  }
+
+  ctx.restore();
+}
+
+function loop() {
+  step();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ---- interaction: drag nodes, drag background to pan, wheel to zoom ----
+let draggedNode = null;
+let panning = false;
+let lastMouse = null;
+
+function findNodeAt(mx, my) {
+  const [wx, wy] = toWorld(mx, my);
+  for (const n of nodes) {
+    const dx = n.x - wx, dy = n.y - wy;
+    if (Math.sqrt(dx * dx + dy * dy) < 14) return n;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousedown', e => {
+  const mx = e.clientX, my = e.clientY;
+  const n = findNodeAt(mx, my);
+  if (n) {
+    draggedNode = n;
+    n.dragging = true;
+    canvas.style.cursor = 'grabbing';
+  } else {
+    panning = true;
+    lastMouse = [mx, my];
+    canvas.style.cursor = 'grabbing';
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const mx = e.clientX, my = e.clientY;
+  if (draggedNode) {
+    const [wx, wy] = toWorld(mx, my);
+    draggedNode.x = wx;
+    draggedNode.y = wy;
+    draggedNode.vx = 0;
+    draggedNode.vy = 0;
+  } else if (panning) {
+    camera.x += (mx - lastMouse[0]) / camera.scale;
+    camera.y += (my - lastMouse[1]) / camera.scale;
+    lastMouse = [mx, my];
+  } else {
+    const n = findNodeAt(mx, my);
+    if (n) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (mx + 12) + 'px';
+      tooltip.style.top = (my + 12) + 'px';
+      const out = links.filter(l => l.source === n).map(l => `${l.label} -> ${l.target.label}`);
+      const inc = links.filter(l => l.target === n).map(l => `${l.source.label} -> (${l.label}) this`);
+      tooltip.innerHTML = `<b>${n.label}</b> <i>(${n.type})</i><br>` + out.concat(inc).join('<br>');
+    } else {
+      tooltip.style.display = 'none';
+    }
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (draggedNode) draggedNode.dragging = false;
+  draggedNode = null;
+  panning = false;
+  canvas.style.cursor = 'grab';
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  camera.scale = Math.max(0.2, Math.min(3, camera.scale * factor));
+}, { passive: false });
+</script>
+</body>
+</html>
